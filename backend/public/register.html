@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BreedIT Admin Registration</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #5aa9e6, #7cc6fe);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .register-container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      width: 400px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+
+    button {
+      background-color: #5aa9e6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #428fd0;
+    }
+
+    .message {
+      margin-top: 10px;
+      font-size: 0.9em;
+      color: red;
+    }
+
+    a {
+      display: block;
+      margin-top: 10px;
+      color: #5aa9e6;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="register-container">
+    <h2>Admin Registration</h2>
+    <form id="registerForm">
+      <input type="text" id="fullName" placeholder="Full Name" required />
+      <input type="text" id="address" placeholder="Address" required />
+      <input type="text" id="contact" placeholder="Contact Info" required />
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button type="submit">Register as Admin</button>
+      <p class="message" id="message"></p>
+    </form>
+    <a href="/login">Already have an account? Login</a>
+  </div>
+
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const fullName = document.getElementById("fullName").value;
+      const address = document.getElementById("address").value;
+      const contact_info = document.getElementById("contact").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const messageEl = document.getElementById("message");
+
+      messageEl.style.color = "black";
+      messageEl.textContent = "Registering...";
+
+      try {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName,
+            address,
+            contact_info,
+            email,
+            password,
+            role: "admin"
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.message || "Registration failed");
+
+        messageEl.style.color = "green";
+        messageEl.textContent = "Admin registered successfully! Redirecting...";
+
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 1500);
+      } catch (err) {
+        messageEl.style.color = "red";
+        messageEl.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+</html>

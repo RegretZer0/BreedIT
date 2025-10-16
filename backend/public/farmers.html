@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BreedIT - Farmers Management</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #a0e3ff, #7cc6fe);
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: white;
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    /* Back Button */
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background-color: #5aa9e6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      font-size: 0.9em;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .back-btn:hover {
+      background-color: #3e91d6;
+    }
+
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 48%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+
+    button {
+      width: 100%;
+      background-color: #5aa9e6;
+      color: white;
+      border: none;
+      padding: 10px;
+      font-size: 1em;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #3e91d6;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #5aa9e6;
+      color: white;
+    }
+
+    #message {
+      text-align: center;
+      color: red;
+      font-size: 0.9em;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="admin_dashboard.html" class="back-btn">← Back to Dashboard</a>
+    <h2>Manage Farmers</h2>
+
+    <form id="farmerForm">
+      <input type="text" id="fullName" placeholder="Full Name" required>
+      <input type="text" id="address" placeholder="Address" required>
+      <input type="text" id="contact_info" placeholder="Contact Info" required>
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <input type="number" id="num_of_pens" placeholder="Number of Pens" required>
+      <input type="number" id="pen_capacity" placeholder="Pen Capacity" required>
+      <button type="submit">Register Farmer</button>
+    </form>
+
+    <p id="message"></p>
+
+    <table id="farmersTable">
+      <thead>
+        <tr>
+          <th>Full Name</th>
+          <th>Address</th>
+          <th>Contact Info</th>
+          <th>Email</th>
+          <th>Number of Pens</th>
+          <th>Pen Capacity</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const form = document.getElementById("farmerForm");
+    const tableBody = document.querySelector("#farmersTable tbody");
+    const messageEl = document.getElementById("message");
+
+    // Register farmer
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const fullName = document.getElementById("fullName").value;
+      const address = document.getElementById("address").value;
+      const contact_info = document.getElementById("contact_info").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const num_of_pens = parseInt(document.getElementById("num_of_pens").value);
+      const pen_capacity = parseInt(document.getElementById("pen_capacity").value);
+
+      messageEl.textContent = "Registering farmer...";
+
+      try {
+        const res = await fetch("/api/auth/register-farmer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName,
+            address,
+            contact_info,
+            email,
+            password,
+            num_of_pens,
+            pen_capacity
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to register");
+
+        messageEl.style.color = "green";
+        messageEl.textContent = "Farmer registered successfully!";
+        form.reset();
+        fetchFarmers();
+      } catch (err) {
+        messageEl.style.color = "red";
+        messageEl.textContent = err.message;
+      }
+    });
+
+    // Fetch and display farmers
+    async function fetchFarmers() {
+      tableBody.innerHTML = "<tr><td colspan='6'>Loading...</td></tr>";
+      try {
+        const res = await fetch("/api/auth/farmers");
+        const farmers = await res.json();
+
+        tableBody.innerHTML = "";
+
+        if (farmers.length === 0) {
+          tableBody.innerHTML = "<tr><td colspan='6'>No farmers registered yet.</td></tr>";
+          return;
+        }
+
+        farmers.forEach((f) => {
+          const row = `
+            <tr>
+              <td>${f.fullName}</td>
+              <td>${f.address}</td>
+              <td>${f.contact_info}</td>
+              <td>${f.email}</td>
+              <td>${f.num_of_pens}</td>
+              <td>${f.pen_capacity}</td>
+            </tr>`;
+          tableBody.insertAdjacentHTML("beforeend", row);
+        });
+      } catch (err) {
+        tableBody.innerHTML = "<tr><td colspan='6'>Error loading farmers.</td></tr>";
+      }
+    }
+
+    // Load farmers on page load
+    fetchFarmers();
+  </script>
+</body>
+</html>
